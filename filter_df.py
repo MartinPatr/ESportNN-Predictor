@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 # Assuming df is your DataFrame
 df = pd.read_csv('LCKStatsRaw.csv', dtype='str')
@@ -115,6 +116,18 @@ def try_convert(value):
 # Apply the conversion function to each element in the DataFrame
 df = df.applymap(try_convert)
 
-
 # Now df contains the additional opponent information
 df.to_csv('LCKStatsFiltered.csv', index=False)
+
+# Split the DataFrame into training and testing sets
+# Load CSV file
+csv_file_path = 'LCKStatsFiltered.csv'  # Replace with the path to your CSV file
+df = pd.read_csv(csv_file_path)
+
+# Split the data into training and evaluation sets
+train_df, eval_df = train_test_split(df, test_size=0.2, random_state=42)
+
+# Save the split datasets to new CSV files
+train_df.to_csv('LCK_training_data.csv', index=False)
+eval_df.to_csv('LCK_evaluation_data.csv', index=False)
+
