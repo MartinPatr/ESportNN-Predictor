@@ -1,10 +1,16 @@
 import numpy as np
 import pandas as pd
 from IPython.display import clear_output
-
+import json
 
 import tensorflow as tf
-import constants
+
+# Load the JSON file
+with open('constants.json', 'r') as json_file:
+    constants_data = json.load(json_file)
+NUMERIC_COLUMNS = constants_data['NUMERIC_COLUMNS']
+CHAMPION_AMOUNT = constants_data['CHAMPION_AMOUNT']
+TEAM_AMOUNT = constants_data['TEAM_AMOUNT']
 
 # Load dataset.
 dftrain = pd.read_csv('LCK_training_data.csv') # training data
@@ -12,7 +18,7 @@ dfeval = pd.read_csv('LCK_evaluation_data.csv') # testing data
 y_train = dftrain.pop('result')
 y_eval = dfeval.pop('result')
 # Pop result from NUMERIC_COLUMNS since it is not a feature
-constants.NUMERIC_COLUMNS.pop(-1)
+NUMERIC_COLUMNS.pop(-1)
 
 # Define the categorical columns for champions and teams
 categorical_columns = ['Champion_1_Number', 'Champion_2_Number', 'Champion_3_Number', 'Champion_4_Number', 'Champion_5_Number',
@@ -24,16 +30,16 @@ categorical_columns = ['Champion_1_Number', 'Champion_2_Number', 'Champion_3_Num
 # Create feature columns
 feature_columns = []
 
-for feature_name in constants.NUMERIC_COLUMNS:
+for feature_name in NUMERIC_COLUMNS:
     if feature_name in categorical_columns:
         # For categorical columns, use embedding_column
         if feature_name != 'Team_Number' and feature_name != 'Opponent_Team_Number':
-            num_buckets = constants.CHAMPION_AMOUNT
+            num_buckets = CHAMPION_AMOUNT
         else:
-            num_buckets = constants.TEAM_AMOUNT
+            num_buckets = TEAM_AMOUNT
         embedding_column = tf.feature_column.embedding_column(
             tf.feature_column.categorical_column_with_identity(feature_name, num_buckets),
-            dimension=15  
+            dimension=20  
         )
         feature_columns.append(embedding_column)
     else:
@@ -50,7 +56,7 @@ def make_input_fn(data_df, label_df, num_epochs=15, shuffle=True, batch_size=32)
     return ds  # return a batch of the dataset
   return input_function  # return a function object for use
 
-train_input_fn = make_input_fn(dftrain, y_train)  # here we will call the input_function that was returned to us to get a dataset object we can feed to the model
+train_input_fn = make_input_fn(dftrain, y_train)
 eval_input_fn = make_input_fn(dfeval, y_eval, num_epochs=1, shuffle=False)
 
 # Create the model
