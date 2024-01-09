@@ -1,8 +1,9 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+import constants
 
 # Assuming df is your DataFrame
-df = pd.read_csv('LCKStatsRaw.csv', dtype='str')
+df = pd.read_csv('2023_LoL_esports.csv', dtype='str')
 
 def get_player_champions():
     # Iterate through the rows
@@ -86,7 +87,6 @@ df['Opponent_Team_Number'] = df['opponent_teamname'].apply(map_team)
 # Apply the team mapping to both 'opponent_teamid' and 'opponent_teamname' columns
 df['Side_Number'] = df['side'].apply(lambda x: 0 if x == 'Red' else 1)
 
-
 # To get the opponent's data, we need to create a new DataFrame
 last_team = False
 for index, row in df.iterrows():
@@ -106,15 +106,36 @@ for index, row in df.iterrows():
         df.loc[index,f'opponent_Champion_Banned_Number{i}'] = df.loc[index + index_add, f'Champion_Banned_Number{i}']
 
 
-# Function to attempt conversion to integer
-def try_convert(value):
+# Get the rolling averages for each team and opponent stat
+# Assuming you have a DataFrame named df, and the columns you want to calculate rolling averages for are in ROLLING_COLUMNS
+ROLLING_COLUMNS = ['vspm', 'teamkills', 'teamdeaths', 'earned gpm']
+# Assuming you have a column representing match dates named 'match_date'
+df['date'] = pd.to_datetime(df['date'])  # Convert to datetime if not already
+
+# Sort the DataFrame by match date
+df = df.sort_values(by='date')
+
+# Create new columns for rolling averages
+for stat in ROLLING_COLUMNS:
+    df[f'{stat}_rolling'] = df.groupby('teamname')[stat].rolling(window=4, min_periods=1).mean().reset_index(level=0, drop=True)
+
+# Create new columns for rolling averages for opponent's stats
+for stat in ROLLING_COLUMNS:
+    df[f'opponent_{stat}_rolling'] = df.groupby('opponent_teamname')[stat].rolling(window=4, min_periods=1).mean().reset_index(level=0, drop=True)
+
+# Function to attempt conversion to integer, but not for columns containing "rolling"
+def try_convert(value, column_name):
     try:
-        return int(value)
+        # Check if the column name contains "rolling"
+        if "rolling" in column_name:
+            return float(value)
+        else:
+            return int(value)
     except (ValueError, TypeError):
         return value
 
 # Apply the conversion function to each element in the DataFrame
-df = df.applymap(try_convert)
+df = df.applymap(lambda x: try_convert(x, df.columns))
 
 # Now df contains the additional opponent information
 df.to_csv('LCKStatsFiltered.csv', index=False)
@@ -123,9 +144,10 @@ df.to_csv('LCKStatsFiltered.csv', index=False)
 # Load CSV file
 csv_file_path = 'LCKStatsFiltered.csv'  # Replace with the path to your CSV file
 df = pd.read_csv(csv_file_path)
+df = df[constants.NUMERIC_COLUMNS]
 
 # Split the data into training and evaluation sets
-train_df, eval_df = train_test_split(df, test_size=0.2, random_state=42)
+train_df, eval_df = train_test_split(df, test_size=0.20, random_state=42)
 
 # Save the split datasets to new CSV files
 train_df.to_csv('LCK_training_data.csv', index=False)
