@@ -15,12 +15,12 @@ This project aims to predict the outcomes of professional esports matches, speci
 - Outputs processed data to 'LCK_training_data.csv' and 'LCK_evaluation_data.csv'. 
 
 
-### 2. 'ESportModel.py'
+### 2. `ESportModel.py`
 - Builds, trains, and evaluates a machine learning model using TensorFlow.
 - Utilizes the processed data from 'LCK_training_data.csv' and 'LCK_evaluation_data.csv'.
 - Implements a linear classifier to predict match outcomes.
 
-### Dependencies
+## Dependencies
 - Python
 - pandas
 - Tensorflow
