@@ -1,6 +1,11 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import constants
+import json
+
+# Load the JSON file
+with open('constants.json', 'r') as json_file:
+    constants_data = json.load(json_file)
+NUMERIC_COLUMNS = constants_data['NUMERIC_COLUMNS']
 
 # Assuming df is your DataFrame
 df = pd.read_csv('2023_LoL_esports.csv', dtype='str')
@@ -106,6 +111,12 @@ for index, row in df.iterrows():
         df.loc[index,f'opponent_Champion_Banned_Number{i}'] = df.loc[index + index_add, f'Champion_Banned_Number{i}']
 
 
+constants_data["CHAMPION_AMOUNT"] = len(champion_mapping) + 1
+constants_data["TEAM_AMOUNT"] = len(team_mapping_dic) + 1
+
+# Write the updated constants back to the JSON file
+with open("constants.json", "w") as file:
+    json.dump(constants_data, file)
 # Get the rolling averages for each team and opponent stat
 # Assuming you have a DataFrame named df, and the columns you want to calculate rolling averages for are in ROLLING_COLUMNS
 ROLLING_COLUMNS = ['vspm', 'teamkills', 'teamdeaths', 'earned gpm']
@@ -144,7 +155,7 @@ df.to_csv('LCKStatsFiltered.csv', index=False)
 # Load CSV file
 csv_file_path = 'LCKStatsFiltered.csv'  # Replace with the path to your CSV file
 df = pd.read_csv(csv_file_path)
-df = df[constants.NUMERIC_COLUMNS]
+df = df[NUMERIC_COLUMNS]
 
 # Split the data into training and evaluation sets
 train_df, eval_df = train_test_split(df, test_size=0.20, random_state=42)
