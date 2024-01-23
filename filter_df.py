@@ -128,11 +128,14 @@ df = df.sort_values(by='date')
 
 # Create new columns for rolling averages
 for stat in ROLLING_COLUMNS:
-    df[f'{stat}_rolling'] = df.groupby('teamname')[stat].rolling(window=4, min_periods=1).mean().reset_index(level=0, drop=True)
+    stat_fixed = stat.replace(' ', '_')
+    df[f'{stat_fixed}_rolling'] = df.groupby('teamname')[stat].rolling(window=4, min_periods=1).mean().reset_index(level=0, drop=True)
 
 # Create new columns for rolling averages for opponent's stats
 for stat in ROLLING_COLUMNS:
-    df[f'opponent_{stat}_rolling'] = df.groupby('opponent_teamname')[stat].rolling(window=4, min_periods=1).mean().reset_index(level=0, drop=True)
+    stat_fixed = stat.replace(' ', '_')
+    df[f'opponent_{stat_fixed}_rolling'] = df.groupby('opponent_teamname')[stat].rolling(window=4, min_periods=1).mean().reset_index(level=0, drop=True)
+
 
 # Function to attempt conversion to integer, but not for columns containing "rolling"
 def try_convert(value, column_name):
