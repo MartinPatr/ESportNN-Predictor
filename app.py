@@ -22,12 +22,11 @@ feature_columns = [tf.feature_column.numeric_column(feature_name, dtype=tf.float
 # Create input function for prediction
 def make_predict_input_fn(data_dict):
     if 'opponent_earned_gpm_rolling' in data_dict:
-        print("ASDSADDASDASDDAS")
-
-    data = {key: [value] for key, value in data_dict.items()}
-    dataset = tf.data.Dataset.from_tensor_slices((data))
-    dataset = dataset.batch(1)
-    return dataset
+        data = {key: [value] for key, value in data_dict.items()}
+        dataset = tf.data.Dataset.from_tensor_slices((data))
+        dataset = dataset.batch(1)
+        return dataset
+    return None
 
 # Define route for home page
 @app.route('/')
