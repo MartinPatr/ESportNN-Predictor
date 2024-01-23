@@ -13,8 +13,8 @@ CHAMPION_AMOUNT = constants_data['CHAMPION_AMOUNT']
 TEAM_AMOUNT = constants_data['TEAM_AMOUNT']
 
 # Load dataset.
-dftrain = pd.read_csv('LCK_training_data.csv') # training data
-dfeval = pd.read_csv('LCK_evaluation_data.csv') # testing data
+dftrain = pd.read_csv('LCK_training_data.csv')  # training data
+dfeval = pd.read_csv('LCK_evaluation_data.csv')  # testing data
 y_train = dftrain.pop('result')
 y_eval = dfeval.pop('result')
 # Pop result from NUMERIC_COLUMNS since it is not a feature
@@ -31,43 +31,41 @@ categorical_columns = ['Champion_1_Number', 'Champion_2_Number', 'Champion_3_Num
 feature_columns = []
 
 for feature_name in NUMERIC_COLUMNS:
-    if feature_name in categorical_columns:
-        # For categorical columns, use embedding_column
-        if feature_name != 'Team_Number' and feature_name != 'Opponent_Team_Number':
-            num_buckets = CHAMPION_AMOUNT
-        else:
-            num_buckets = TEAM_AMOUNT
-        embedding_column = tf.feature_column.embedding_column(
-            tf.feature_column.categorical_column_with_identity(feature_name, num_buckets),
-            dimension=20  
-        )
-        feature_columns.append(embedding_column)
-    else:
-        # For numerical columns, use numeric_column
-        feature_columns.append(tf.feature_column.numeric_column(feature_name, dtype=tf.float32))
+    # For numerical columns, use numeric_column
+    feature_columns.append(tf.feature_column.numeric_column(feature_name, dtype=tf.float32))
 
 # Input function
-def make_input_fn(data_df, label_df, num_epochs=15, shuffle=True, batch_size=32):
-  def input_function():  # inner function, this will be returned
-    ds = tf.data.Dataset.from_tensor_slices((dict(data_df), label_df))  # create tf.data.Dataset object with data and its label
-    if shuffle:
-      ds = ds.shuffle(1000)  # randomize order of data
-    ds = ds.batch(batch_size).repeat(num_epochs)  # split dataset into batches of 32 and repeat process for the number of epochs
-    return ds  # return a batch of the dataset
-  return input_function  # return a function object for use
+def make_input_fn(data_df, label_df, num_epochs=5, shuffle=True, batch_size=64):
+    def input_function():  # inner function, this will be returned
+        ds = tf.data.Dataset.from_tensor_slices((dict(data_df), label_df))  # create tf.data.Dataset object with data and its label
+        if shuffle:
+            ds = ds.shuffle(1000)  # randomize order of data
+        ds = ds.batch(batch_size).repeat(num_epochs)  # split dataset into batches of 32 and repeat process for the number of epochs
+        return ds  # return a batch of the dataset
+
+    return input_function  # return a function object for use
 
 train_input_fn = make_input_fn(dftrain, y_train)
-eval_input_fn = make_input_fn(dfeval, y_eval, num_epochs=1, shuffle=False)
+eval_input_fn = make_input_fn(dfeval, y_eval, num_epochs=2, shuffle=False)
 
-# Create the model
-linear_est = tf.estimator.LinearClassifier(feature_columns=feature_columns)
+# Create the model using tf.keras.Sequential
+model = tf.keras.Sequential([
+    tf.keras.layers.DenseFeatures(feature_columns),  # Feature columns from tf.feature_column
+    tf.keras.layers.Dense(256, activation='relu'),
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dense(1, activation='sigmoid')  # Output layer with sigmoid activation for binary classification
+])
+
+# Compile the model
+model.compile(optimizer='adam',
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
 
 # Train the model
-linear_est.train(train_input_fn)  # train
-result = linear_est.evaluate(eval_input_fn)  # get model metrics/stats by testing on testing data
+model.fit(train_input_fn(), epochs=2)
 
-clear_output()  # clears console output
-print(result['accuracy'])
+# Evaluate the model
+result = model.evaluate(eval_input_fn())
+print(result[1])  # Accuracy
 
-# Predictions
-result = list(linear_est.predict(eval_input_fn))
