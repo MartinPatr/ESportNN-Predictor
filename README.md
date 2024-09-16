@@ -56,17 +56,20 @@ This project aims to predict the outcomes of professional esports matches, speci
 - **lucide-react**: For displaying icons (e.g., Shield icon).
 - **typescript**: For type safety in the React application.
 
+
 ## Setup Instructions
-  - ```bash
-  - cd backend/
-  - pip install -r requirements.txt
-  - python app.py
+  ```bash
+  cd backend/
+  pip install -r requirements.txt
+  python app.py
 
-  - cd ..
+  cd ..
 
-  - cd frontend/
-  - npm install
-  - npm start
+  cd frontend/
+  npm install
+  npm start
+  ```
+
 
 ## How to Use
 	1.	Open the React app in your browser (http://localhost:3000).
